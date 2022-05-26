@@ -14,21 +14,21 @@ const resource = 'users'
 const resourceUnique = 'user'
 
 export function useGetUser() {
-  return useQuery([resource], () => api.get<TUser[]>(resource))
+  return useQuery([resource], async () => await api.get<TUser[]>(resource))
 }
 
 export function useGetByIdUser(id: string) {
-  return useQuery([resourceUnique, id], () => api.get<TUser>(`${resource}/${id}`))
+  return useQuery([resourceUnique, id], async () => await api.get<TUser>(`${resource}/${id}`))
 }
 
 export function usePostUser() {
-  return useMutation((userData: TUser) => api.post(resource, userData))
+  return useMutation(async (userData: TUser) => await api.post(resource, userData))
 }
 
 export function useUpdateUser(id: string) {
-  return useMutation((userData: TUser) => api.put(`${resource}/${id}`, userData))
+  return useMutation(async (userData: TUser) => await api.put(`${resource}/${id}`, userData))
 }
 
 export function useDeleteUser() {
-  return useMutation((id: string) => api.delete(`${resource}/${id}`))
+  return useMutation(async (id: string) => await api.delete(`${resource}/${id}`))
 }

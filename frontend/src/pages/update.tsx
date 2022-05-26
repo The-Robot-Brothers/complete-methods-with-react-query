@@ -1,4 +1,4 @@
-import { Button, Checkbox, createStandaloneToast, Flex, FormLabel, Heading, Input, Spinner, Text, useTheme } from "@chakra-ui/react";
+import { Button, Checkbox, Flex, FormLabel, Heading, Input, Spinner, Text, useToast } from "@chakra-ui/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -6,8 +6,7 @@ import { TUser, useGetByIdUser, useUpdateUser } from "../hooks/useUsers";
 
 export default function Update() {
   const router = useRouter()
-  const theme = useTheme()
-  const toast = createStandaloneToast({ theme })
+  const toast = useToast()
   const { handleSubmit, register, formState: { isSubmitting } } = useForm<TUser>()
 
   const { id } = router.query
@@ -21,27 +20,25 @@ export default function Update() {
     }
 
     updateUserMutation(userData, {
-      onError: (error) => {
-        alert(error)
-        // toast({
-        //   title: 'error',
-        //   description: 'Invalid data',
-        //   status: 'error',
-        //   position: 'top',
-        //   duration: 3000,
-        //   isClosable: true,
-        // })
+      onError: () => {
+        toast({
+          title: 'error',
+          description: 'Bad request',
+          status: 'error',
+          position: 'top',
+          duration: 3000,
+          isClosable: true,
+        })
       },
       onSuccess: () => {
-        alert('User updated')
-        // toast({
-        //   title: 'success',
-        //   description: 'User updated',
-        //   status: 'success',
-        //   position: 'top',
-        //   duration: 3000,
-        //   isClosable: true,
-        // })
+        toast({
+          title: 'success',
+          description: 'User updated',
+          status: 'success',
+          position: 'top',
+          duration: 3000,
+          isClosable: true,
+        })
 
         router.push('/')
       }
@@ -52,7 +49,6 @@ export default function Update() {
     <Flex w='100vw' h='100vh' align='center' justify='center' flexDir='column'  >
       <Heading fontSize='3xl' >
         Update
-        {isLoading && <Spinner />}
       </Heading>
 
       {isLoading ? <Spinner />

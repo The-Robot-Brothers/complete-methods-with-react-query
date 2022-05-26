@@ -1,46 +1,52 @@
-import { Button, Flex, IconButton, Spinner, Table, Tbody, Td, Text, Th, Thead, Tr } from "@chakra-ui/react";
+import { Button, Flex, Grid, Heading, IconButton, Spinner, Table, Tbody, Td, Text, Th, Thead, Tr, useToast } from "@chakra-ui/react";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { RiDeleteBin2Fill, RiPencilFill } from "react-icons/ri";
 import { useDeleteUser, useGetUser } from "../hooks/useUsers";
 
 export default function Home() {
-  const router = useRouter()
+  const toast = useToast()
 
-  const { data: users, isLoading, isError } = useGetUser()
+  const { data: users, isLoading, isError, isFetching } = useGetUser()
   const { mutate: deleteUserMutation } = useDeleteUser()
 
   function handleDeleteUser(id: string) {
     deleteUserMutation(id, {
-      onError: (error) => {
-        alert(error)
-        // toast({
-        //   title: 'error',
-        //   description: 'Invalid data',
-        //   status: 'error',
-        //   position: 'top',
-        //   duration: 3000,
-        //   isClosable: true,
-        // })
+      onError: () => {
+        toast({
+          title: 'error',
+          description: 'Bad request',
+          status: 'error',
+          position: 'top',
+          duration: 3000,
+          isClosable: true,
+        })
       },
       onSuccess: () => {
-        alert('User deleted')
-        // toast({
-        //   title: 'success',
-        //   description: 'User deleted',
-        //   status: 'success',
-        //   position: 'top',
-        //   duration: 3000,
-        //   isClosable: true,
-        // })
-
-        router.push('/')
+        toast({
+          title: 'success',
+          description: 'User deleted',
+          status: 'success',
+          position: 'top',
+          duration: 3000,
+          isClosable: true,
+        })
       }
     })
   }
 
   return (
-    <Flex w='100vw' h='100vh' justify='center' py={50} >
+    <Grid w='100vw' h='100vh' py={50} justifyContent='center' >
+      <Flex justify='space-between' align='center' >
+        <Heading fontSize='3xl'>
+          List of Users
+          {isFetching && <Spinner ml={2} />}
+        </Heading>
+
+        <Link passHref href='/create' >
+          <Button size='lg' >Criar Novo</Button>
+        </Link>
+      </Flex>
+
       {isLoading ? <Spinner />
         : isError ? <Text>Erro em carregar os dados, ou não existe um lista de usuários!</Text>
           : (
@@ -83,10 +89,6 @@ export default function Home() {
             </Table>
           )
       }
-
-      <Link passHref href='/create' >
-        <Button>Criar Novo</Button>
-      </Link>
-    </Flex>
+    </Grid>
   )
 }

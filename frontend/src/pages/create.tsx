@@ -1,4 +1,4 @@
-import { Button, Checkbox, createStandaloneToast, Flex, FormLabel, Input, useTheme } from "@chakra-ui/react";
+import { Button, Checkbox, Flex, FormLabel, Input, useToast } from "@chakra-ui/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -6,8 +6,7 @@ import { TUser, usePostUser } from "../hooks/useUsers";
 
 export default function Create() {
   const router = useRouter()
-  const theme = useTheme()
-  const toast = createStandaloneToast({ theme })
+  const toast = useToast()
 
   const { mutate: createUserMutation } = usePostUser()
 
@@ -21,27 +20,25 @@ export default function Create() {
     }
 
     createUserMutation(userData, {
-      onError: (error) => {
-        alert(error)
-        // toast({
-        //   title: 'error',
-        //   description: 'Invalid data',
-        //   status: 'error',
-        //   position: 'top',
-        //   duration: 3000,
-        //   isClosable: true,
-        // })
+      onError: () => {
+        toast({
+          title: 'error',
+          description: 'Bad request',
+          status: 'error',
+          position: 'top',
+          duration: 3000,
+          isClosable: true,
+        })
       },
       onSuccess: () => {
-        alert('User created')
-        // toast({
-        //   title: 'success',
-        //   description: 'User created',
-        //   status: 'success',
-        //   position: 'top',
-        //   duration: 3000,
-        //   isClosable: true,
-        // })
+        toast({
+          title: 'success',
+          description: 'User created',
+          status: 'success',
+          position: 'top',
+          duration: 3000,
+          isClosable: true,
+        })
 
         router.push('/')
       }
