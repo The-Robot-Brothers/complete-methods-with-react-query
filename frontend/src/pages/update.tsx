@@ -1,78 +1,77 @@
-import { Button, Checkbox, Flex, FormLabel, Input, Spinner, Text } from "@chakra-ui/react";
+import { Button, Checkbox, createStandaloneToast, Flex, FormLabel, Heading, Input, Spinner, Text, useTheme } from "@chakra-ui/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useMutation, useQuery } from "react-query";
-import { api } from "../services/api";
-
-type UserData = {
-  username: string
-  is_admin: boolean
-}
-
-async function getUserById(id: string) {
-  const { data } = await api.get(`users/${id}`)
-
-  return data as UserData
-}
+import { TUser, useGetByIdUser, useUpdateUser } from "../hooks/useUsers";
 
 export default function Update() {
   const router = useRouter()
-
-  const { handleSubmit, register, formState: { isSubmitting } } = useForm<UserData>()
+  const theme = useTheme()
+  const toast = createStandaloneToast({ theme })
+  const { handleSubmit, register, formState: { isSubmitting } } = useForm<TUser>()
 
   const { id } = router.query
-  const { data, isLoading, error } = useQuery(['user', id], () => getUserById(String(id)))
+  const { data: user, isLoading, isError } = useGetByIdUser(String(id))
+  const { mutate: updateUserMutation } = useUpdateUser(String(id))
 
-  const userMutation = useMutation((updateUserData: UserData) => api.put(`users/${id}`, updateUserData), {
-    onError: (error, variables, context) => {
-      console.log("ERR", error)
-      alert(`Error: ${error}`)
-    },
-    onSuccess: (result, variables, context) => {
-      alert('Editado com susseso')
-
-      router.push('/')
-    }
-  })
-
-  const onSubmit: SubmitHandler<UserData> = async data => {
+  const onSubmit: SubmitHandler<TUser> = async data => {
     const userData = {
       username: data.username,
       is_admin: data.is_admin
     }
 
-    userMutation.mutate(userData)
+    updateUserMutation(userData, {
+      onError: (error) => {
+        alert(error)
+        // toast({
+        //   title: 'error',
+        //   description: 'Invalid data',
+        //   status: 'error',
+        //   position: 'top',
+        //   duration: 3000,
+        //   isClosable: true,
+        // })
+      },
+      onSuccess: () => {
+        alert('User updated')
+        // toast({
+        //   title: 'success',
+        //   description: 'User updated',
+        //   status: 'success',
+        //   position: 'top',
+        //   duration: 3000,
+        //   isClosable: true,
+        // })
+
+        router.push('/')
+      }
+    })
   }
 
   return (
     <Flex w='100vw' h='100vh' align='center' justify='center' flexDir='column'  >
-      <Text fontSize='3xl' >
+      <Heading fontSize='3xl' >
         Update
         {isLoading && <Spinner />}
-      </Text>
+      </Heading>
 
-      {isLoading
-        ? (
-          <Spinner />
-        ) : error ? (
-          <Text>Nao conseguimos carregar os dados</Text>
-        ) : (
-          <>
-            <Text><strong>User ID:</strong> {id}</Text>
-
+      {isLoading ? <Spinner />
+        : isError ? <Text>Nao conseguimos carregar os dados do usuário!</Text>
+          : (
             <Flex as='form' onSubmit={handleSubmit(onSubmit)} flexDir='column' gap={6} mt={6} w='300px' >
+              <Text><strong>User ID:</strong> {id}</Text>
+
               <Flex flexDir='column' >
                 <FormLabel>Username</FormLabel>
                 <Input
-                  defaultValue={data?.username}
+                  defaultValue={user?.data?.username}
                   {...register('username')}
                   autoFocus
                 />
               </Flex>
 
               <Checkbox
-                defaultChecked={data?.is_admin === true ? true : false}
+                defaultChecked={user?.data?.is_admin === true ? true : false}
                 {...register('is_admin')}
               >
                 Administrador
@@ -87,8 +86,7 @@ export default function Update() {
                 </Button>
               </Flex>
             </Flex>
-          </>
-        )
+          )
       }
 
     </Flex >

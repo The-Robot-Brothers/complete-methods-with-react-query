@@ -1,40 +1,51 @@
-import { Button, Checkbox, Flex, FormLabel, Input } from "@chakra-ui/react";
+import { Button, Checkbox, createStandaloneToast, Flex, FormLabel, Input, useTheme } from "@chakra-ui/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useMutation } from "react-query";
-import { api } from "../services/api";
-
-type UserData = {
-  username: string
-  password: string
-  is_admin: boolean
-}
+import { TUser, usePostUser } from "../hooks/useUsers";
 
 export default function Create() {
   const router = useRouter()
-  const { handleSubmit, register, formState: { isSubmitting } } = useForm<UserData>()
+  const theme = useTheme()
+  const toast = createStandaloneToast({ theme })
 
-  const userMutation = useMutation((createUserData: UserData) => api.post('users', createUserData), {
-    onError: (error, variables, context) => {
-      console.log("ERR", error)
-      alert(`Error: ${error}`)
-    },
-    onSuccess: (result, variables, context) => {
-      alert('Criado com susseso')
+  const { mutate: createUserMutation } = usePostUser()
 
-      router.push('/')
-    }
-  })
+  const { handleSubmit, register, formState: { isSubmitting } } = useForm<TUser>()
 
-  const onSubmit: SubmitHandler<UserData> = data => {
+  const onSubmit: SubmitHandler<TUser> = data => {
     const userData = {
       username: data.username,
       password: data.password,
       is_admin: data.is_admin
     }
 
-    userMutation.mutate(userData)
+    createUserMutation(userData, {
+      onError: (error) => {
+        alert(error)
+        // toast({
+        //   title: 'error',
+        //   description: 'Invalid data',
+        //   status: 'error',
+        //   position: 'top',
+        //   duration: 3000,
+        //   isClosable: true,
+        // })
+      },
+      onSuccess: () => {
+        alert('User created')
+        // toast({
+        //   title: 'success',
+        //   description: 'User created',
+        //   status: 'success',
+        //   position: 'top',
+        //   duration: 3000,
+        //   isClosable: true,
+        // })
+
+        router.push('/')
+      }
+    })
   }
 
   return (

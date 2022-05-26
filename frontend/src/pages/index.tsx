@@ -1,102 +1,87 @@
 import { Button, Flex, IconButton, Spinner, Table, Tbody, Td, Text, Th, Thead, Tr } from "@chakra-ui/react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { RiDeleteBin2Fill, RiPencilFill } from "react-icons/ri";
-import { useMutation, useQuery } from "react-query";
-import { api } from "../services/api";
-
-type UserData = {
-  id: string
-  username: string
-  password: string
-  is_admin: boolean
-  created_at: string
-  updated_at: string
-}
-
-async function getUsers() {
-  const { data } = await api.get('users')
-
-  const user = data.map((user: UserData) => {
-    return {
-      id: user.id,
-      username: user.username,
-      password: user.password,
-      is_admin: user.is_admin,
-      created_at: new Date(user.created_at).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      }),
-      updated_at: user.updated_at
-    }
-  })
-
-  return user as UserData[]
-}
+import { useDeleteUser, useGetUser } from "../hooks/useUsers";
 
 export default function Home() {
-  const { data, isLoading, error } = useQuery('users', () => getUsers())
+  const router = useRouter()
 
-  const deleteUserMutation = useMutation((id: string) => api.delete(`users/${id}`), {
-    onError: (error, variables, context) => {
-      console.log("ERR", error)
-      alert(`Error: ${error}`)
-    },
-    onSuccess: (result, variables, context) => {
-      alert('Eliminado com susseso')
-    }
-  })
+  const { data: users, isLoading, isError } = useGetUser()
+  const { mutate: deleteUserMutation } = useDeleteUser()
 
-  function toggleDeleteUser(id: string) {
-    deleteUserMutation.mutate(id)
+  function handleDeleteUser(id: string) {
+    deleteUserMutation(id, {
+      onError: (error) => {
+        alert(error)
+        // toast({
+        //   title: 'error',
+        //   description: 'Invalid data',
+        //   status: 'error',
+        //   position: 'top',
+        //   duration: 3000,
+        //   isClosable: true,
+        // })
+      },
+      onSuccess: () => {
+        alert('User deleted')
+        // toast({
+        //   title: 'success',
+        //   description: 'User deleted',
+        //   status: 'success',
+        //   position: 'top',
+        //   duration: 3000,
+        //   isClosable: true,
+        // })
+
+        router.push('/')
+      }
+    })
   }
 
   return (
     <Flex w='100vw' h='100vh' justify='center' py={50} >
-      {isLoading
-        ? (
-          <Spinner />
-        ) : error ? (
-          <Text>Erro em carregar os dados, ou nao existe!</Text>
-        ) : (
-          <Table variant='unstyled' h='min' maxW='720px' >
-            <Thead color='gray.500' >
-              <Tr>
-                <Th>USERNAME</Th>
-                <Th>ADMIN</Th>
-                <Th>CRIADO</Th>
-                <Th></Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {data?.map(user => {
-                return (
-                  <Tr key={user.id} >
-                    <Td>{user.username}</Td>
-                    <Td>{user.is_admin === true ? 'Administrador' : 'Colaborador'}</Td>
-                    <Td>{user.created_at}</Td>
-                    <Td>
-                      <Link passHref href={{
-                        pathname: '/update',
-                        query: {
-                          id: user.id
-                        }
-                      }} >
-                        <IconButton aria-label='Button to update user' icon={<RiPencilFill />} />
-                      </Link>
-                      <IconButton
-                        marginLeft={2}
-                        aria-label="Button to delete user"
-                        icon={<RiDeleteBin2Fill />}
-                        onClick={() => toggleDeleteUser(user.id)}
-                      />
-                    </Td>
-                  </Tr>
-                )
-              })}
-            </Tbody>
-          </Table>
-        )
+      {isLoading ? <Spinner />
+        : isError ? <Text>Erro em carregar os dados, ou não existe um lista de usuários!</Text>
+          : (
+            <Table variant='unstyled' h='min' maxW='720px' >
+              <Thead color='gray.500' >
+                <Tr>
+                  <Th>USERNAME</Th>
+                  <Th>ADMIN</Th>
+                  <Th>CRIADO</Th>
+                  <Th></Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {users?.data?.map(user => {
+                  return (
+                    <Tr key={user.id} >
+                      <Td>{user.username}</Td>
+                      <Td>{user.is_admin === true ? 'Administrador' : 'Colaborador'}</Td>
+                      <Td>{user.created_at}</Td>
+                      <Td>
+                        <Link passHref href={{
+                          pathname: '/update',
+                          query: {
+                            id: user.id
+                          }
+                        }} >
+                          <IconButton aria-label='Button to update user' icon={<RiPencilFill />} />
+                        </Link>
+                        <IconButton
+                          marginLeft={2}
+                          aria-label="Button to delete user"
+                          icon={<RiDeleteBin2Fill />}
+                          onClick={() => handleDeleteUser(String(user.id))}
+                        />
+                      </Td>
+                    </Tr>
+                  )
+                })}
+              </Tbody>
+            </Table>
+          )
       }
 
       <Link passHref href='/create' >
