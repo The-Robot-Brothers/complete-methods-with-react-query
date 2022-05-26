@@ -12,16 +12,23 @@ class UpdateUserController {
 
     const service = new UpdateUserService()
 
-    const user = await service.execute(
-      id,
-      {
-        username,
-        password,
-        is_admin
-      }
-    )
+    try {
+      const user = await service.execute(
+        id,
+        {
+          username,
+          password,
+          is_admin
+        }
+      )
 
-    return response.status(203).json(user)
+      return response.status(200).json(user)
+    } catch (error) {
+      return response.status(400).json({
+        message: 'Bad request',
+        status: 401
+      })
+    }
 
   }
 }

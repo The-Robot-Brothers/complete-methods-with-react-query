@@ -5,9 +5,17 @@ class ListUserController {
   async handle(request: Request, response: Response) {
     const service = new ListUserService()
 
-    const users = await service.execute()
+    try {
+      const users = await service.execute()
 
-    return response.status(200).json(users)
+      return response.status(200).json(users)
+    } catch (error) {
+      return response.status(400).json({
+        message: 'Bad request',
+        status: 400
+      })
+    }
+
   }
 }
 

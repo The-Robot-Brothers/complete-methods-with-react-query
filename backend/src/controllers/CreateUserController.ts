@@ -7,9 +7,16 @@ class CreateUserController {
 
     const service = new CreateUserService()
 
-    const newUser = await service.execute(user)
+    try {
+      const newUser = await service.execute(user)
 
-    return response.status(202).json(newUser)
+      return response.status(200).json(newUser)
+    } catch (error) {
+      return response.status(400).json({
+        message: 'Bad request',
+        status: 400
+      })
+    }
   }
 }
 

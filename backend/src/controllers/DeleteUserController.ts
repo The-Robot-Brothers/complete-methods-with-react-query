@@ -7,9 +7,20 @@ class DeleteUserController {
 
     const service = new DeleteUserService()
 
-    await service.execute(id)
+    try {
+      await service.execute(id)
 
-    return response.status(204).json('User deleted with success')
+      return response.status(200).json({
+        message: 'User deleted with success',
+        status: 200
+      })
+    } catch (error) {
+      return response.status(400).json({
+        message: 'Bad request',
+        status: 401
+      })
+    }
+
   }
 }
 
